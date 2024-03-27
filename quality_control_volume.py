@@ -15,7 +15,7 @@ def get_slicer_from_nii(input_path, output_path):
         #     break
         # elif sub_file.endswith('.nhdr'):
         #     input_file = os.path.join(input_path, sub_file)
-        if sub_file.endswith('.nii.gz'):
+        if sub_file.endswith('.nii.gz') or sub_file.endswith('.nii'):
             input_file = os.path.join(input_path, sub_file)
     if input_file is None:
         print(input_path)
@@ -89,14 +89,15 @@ def get_slicer_from_nii(input_path, output_path):
     # fig.tight_layout()
     # fig.savefig(os.path.join(output_path, input_file.split('/')[-1]) + '.png')
 
+    # # for test
     # test_image = final_image_list[4]
     # test_image = Image.fromarray(test_image)
     # test_image.save(os.path.join(output_path, input_file.split('/')[-1] + 'test.png'))
 
 
-output_path = '/data05/weizhang_projects/ASD_301_preprocessing/qc/image_output'
+output_path = '/data05/weizhang_projects/ASD_301_preprocessing/qc/image_output_new'
 os.makedirs(output_path, exist_ok=True)
-input_roots = ['/data04/ASD_301_preprocessing/ASDN']
+input_roots = ['/data04/ASD_301_preprocessing_new/site1_dcm']
 for input_root in input_roots:
     subjects = os.listdir(input_root)
     for i in tqdm(range(len(subjects))):
