@@ -4,6 +4,7 @@ import nibabel
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
+import conversion
 
 
 def get_slicer_from_nii(input_path, output_path):
@@ -29,7 +30,7 @@ def get_slicer_from_nii(input_path, output_path):
     volume_data_range = np.max(volume_data) - np.min(volume_data)
     # get 3 images from axis=0
     for i in range(0, 3):
-        image_arr = volume_data[:, :, int(volume_data.shape[2] / 6 * (i + 2))] / volume_data_range * 255
+        image_arr = (volume_data[:, :, int(volume_data.shape[2] / 6 * (i + 2))]-np.min(volume_data)) / volume_data_range * 255
         image_arr = image_arr.astype(np.uint8)
         image_arr = image_arr.T
         image_arr = np.flip(image_arr, axis=1)
@@ -38,7 +39,7 @@ def get_slicer_from_nii(input_path, output_path):
 
     # get 3 image from axis=1
     for i in range(0, 3):
-        image_arr = volume_data[:, int(volume_data.shape[1] / 6 * (i + 2)), :] / volume_data_range * 255
+        image_arr = (volume_data[:, int(volume_data.shape[1] / 6 * (i + 2)), :]-np.min(volume_data)) / volume_data_range * 255
         image_arr = image_arr.astype(np.uint8)
         image_arr = image_arr.T
         image_arr = np.flip(image_arr, axis=0)
@@ -47,23 +48,24 @@ def get_slicer_from_nii(input_path, output_path):
 
     # get 3 image from axis=2
     for i in range(3):
-        image_arr = volume_data[int(volume_data.shape[0] / 6 * (i + 2)), :, :] / volume_data_range * 255
+        image_arr = (volume_data[int(volume_data.shape[0] / 6 * (i + 2)), :, :]-np.min(volume_data)) / volume_data_range * 255
         image_arr = image_arr.astype(np.uint8)
         image_arr = image_arr.T
         image_arr = np.flip(image_arr, axis=0)
 
         final_image_list.append(image_arr)
 
-    # resize all images
+    if '14106' in input_path:
+        print(1)
 
     # use Image to cat all images
     # resize, get width height
     widths = []
     heights = []
     for i in range(0, len(final_image_list)):
-        temp_height = final_image_list[i].shape[0] * 2
-        temp_width = final_image_list[i].shape[1] * 2
-        final_image_list[i] = Image.fromarray(final_image_list[i]).resize((temp_width, temp_height))
+        temp_height = final_image_list[i].shape[0]
+        temp_width = final_image_list[i].shape[1]
+        final_image_list[i] = Image.fromarray(final_image_list[i]).resize(( temp_width,temp_height))
         heights.append(temp_height)
         widths.append(temp_width)
 
@@ -71,7 +73,7 @@ def get_slicer_from_nii(input_path, output_path):
     new_width = np.sum(widths)
     new_height = np.max(heights)
 
-    new_image = Image.new('L', (new_width, new_height))
+    new_image = Image.new('L', (new_width,new_height ))
 
     for i in range(0, len(final_image_list)):
         temp_width = int(np.sum(widths[:i]))
@@ -103,3 +105,16 @@ for input_root in input_roots:
     for i in tqdm(range(len(subjects))):
         input_path = os.path.join(input_root, subjects[i], 'ses-1/dwi/')
         get_slicer_from_nii(input_path, output_path)
+        # break
+        # convert
+        nii_name, bvec_name, bval_name = None, None, None
+        for file_name in os.listdir(input_path):
+            if file_name.endswith('.nii') or file_name.endswith('.nii.gz'):
+                nii_name = os.path.join(input_path, file_name)
+            elif file_name.endswith('.bvec'):
+                bvec_name = os.path.join(input_path, file_name)
+            elif file_name.endswith('.bval'):
+                bval_name = os.path.join(input_path, file_name)
+        nhdr_name = os.path.join(input_path, input_path.split('/')[-4] + '.nhdr')
+        # conversion.nhdr_write(nii_name, bval_name, bvec_name, nhdr_name)
+        # print(input_path,nii_name, bval_name, bvec_name, nhdr_name)
