@@ -55,8 +55,6 @@ def get_slicer_from_nii(input_path, output_path):
 
         final_image_list.append(image_arr)
 
-    if '14106' in input_path:
-        print(1)
 
     # use Image to cat all images
     # resize, get width height
@@ -97,9 +95,9 @@ def get_slicer_from_nii(input_path, output_path):
     # test_image.save(os.path.join(output_path, input_file.split('/')[-1] + 'test.png'))
 
 
-output_path = '/data05/weizhang_projects/ASD_301_preprocessing/qc/image_output_final_nii'
+output_path = '/data05/weizhang_projects/ASD_301_preprocessing/qc/image_output_final_dcm'
 os.makedirs(output_path, exist_ok=True)
-input_roots = ['/data04/ASD_301_final_preprocess/site2_nii']
+input_roots = ['/data04/ASD_301_final_preprocess/site1_dcm']
 for input_root in input_roots:
     subjects = os.listdir(input_root)
     for i in tqdm(range(len(subjects))):
@@ -115,6 +113,6 @@ for input_root in input_roots:
                 bvec_name = os.path.join(input_path, file_name)
             elif file_name.endswith('.bval'):
                 bval_name = os.path.join(input_path, file_name)
-        nhdr_name = os.path.join(input_path, input_path.split('/')[-4] + '.nhdr')
+        # nhdr_name = os.path.join(input_path, input_path.split('/')[-4] + '.nhdr')
         # conversion.nhdr_write(nii_name, bval_name, bvec_name, nhdr_name)
         # print(input_path,nii_name, bval_name, bvec_name, nhdr_name)
