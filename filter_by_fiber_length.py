@@ -11,6 +11,7 @@ def compute_length(point1, point2):
 
 
 def filter_fiber(fiber_vtk_name, output_name):
+    # read vtk/vtp
     basename, extension = os.path.splitext(fiber_vtk_name)
     if extension == '.vtk':
         reader = vtk.vtkPolyDataReader()
@@ -23,7 +24,9 @@ def filter_fiber(fiber_vtk_name, output_name):
         reader.Update()
         inpd = reader.GetOutput()
 
+    # get point data 
     inpointdata = inpd.GetPointData()
+    # get array and their name in point data
     f2_array = inpointdata.GetArray(0)
     f2_array_name = f2_array.GetName()
     estimated_array = inpointdata.GetArray(1)
@@ -31,6 +34,7 @@ def filter_fiber(fiber_vtk_name, output_name):
     f1_array = inpointdata.GetArray(2)
     f1_array_name = f1_array.GetName()
 
+    # create new array, new points, new lines
     f1_new_array = vtk.vtkFloatArray()
     f1_new_array.SetName(f1_array_name)
     f2_new_array = vtk.vtkFloatArray()
@@ -41,6 +45,7 @@ def filter_fiber(fiber_vtk_name, output_name):
     outlines = vtk.vtkCellArray()
     outlines.InitTraversal()
 
+    # traverse every point in every line
     inpd.GetLines().InitTraversal()
     for lidx in range(0, inpd.GetNumberOfLines()):
         ptids = vtk.vtkIdList()
@@ -50,24 +55,30 @@ def filter_fiber(fiber_vtk_name, output_name):
         end_point = inpd.GetPoints().GetPoint(ptids.GetId(num_points - 1))
         # compute length
         length = compute_length(head_point, end_point)
+        # >= threshould value
         if length >= int(args.filter_length):
-            # insert to new vtkpoints / vtkFloatArray
+            
             out_ptids = vtk.vtkIdList()
             for ptid in range(0, num_points):
+                # add new points 
                 point = inpd.GetPoints().GetPoint(ptids.GetId(ptid))
                 idx = outpoints.InsertNextPoint(point)
                 out_ptids.InsertNextId(idx)
 
+                # get old array
                 f1 = f1_array.GetTuple(ptids.GetId(ptid))[0]
                 f2 = f2_array.GetTuple(ptids.GetId(ptid))[0]
                 estimated = estimated_array.GetTuple(ptids.GetId(ptid))[0]
 
+                # add new array
                 f1_new_array.InsertNextTuple1(f1)
                 f2_new_array.InsertNextTuple1(f2)
                 estimated_new_array.InsertNextTuple1(estimated)
 
+            # add new lines
             outlines.InsertNextCell(out_ptids)
 
+    # create new vtk
     outpd = vtk.vtkPolyData()
     outpd.SetLines(outlines)
     outpd.SetPoints(outpoints)
